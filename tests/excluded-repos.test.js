@@ -82,15 +82,15 @@ describe("excluded-repos", () => {
       const consoleSpy = jest
         .spyOn(console, "error")
         .mockImplementation(() => {});
-      
+
       // Test dangerous characters (HTML tags, script injection attempts)
       process.env.EXCLUDE_PATTERNS = "'/^test<script>/','/<.*>/'";
       const patterns = getPatternReposFromEnv();
       expect(patterns).toHaveLength(0);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Unsafe regex pattern rejected")
+        expect.stringContaining("Unsafe regex pattern rejected"),
       );
-      
+
       consoleSpy.mockRestore();
     });
 

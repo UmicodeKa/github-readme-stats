@@ -11,7 +11,9 @@ dotenv.config();
  * @returns {string[]} Array of parsed values
  */
 const parseQuotedCommaSeparated = (str) => {
-  if (!str || str.trim() === "") {return [];}
+  if (!str || str.trim() === "") {
+    return [];
+  }
 
   const regex = /'([^']*)'/g;
   const matches = [];
@@ -27,7 +29,7 @@ const parseQuotedCommaSeparated = (str) => {
 /**
  * Parse regex patterns from quoted comma-separated string
  * Example: "'/^test_/','/^dev_/'" -> [/^test_/, /^dev_/]
- * 
+ *
  * Security: Only allows safe regex patterns to prevent RegExp injection
  *
  * @param {string} str The input string to parse
@@ -39,29 +41,31 @@ const parseRegexPatterns = (str) => {
     .map((pattern) => {
       // Remove leading/trailing slashes if present
       const cleanPattern = pattern.replace(/^\/|\/$/g, "");
-      
+
       // Security: Validate pattern contains only safe characters
       // Allow: alphanumeric, underscore, hyphen, dot, caret, dollar, asterisk, plus, question mark, square brackets
       if (!/^[a-zA-Z0-9_\-.*+?^$[\]\\]+$/.test(cleanPattern)) {
         console.error(`Unsafe regex pattern rejected: ${pattern}`);
         return null;
       }
-      
+
       // Security: Reject patterns that could cause ReDoS or injection
       const dangerousPatterns = [
-        /\(\?\=/,  // Positive lookahead
-        /\(\?\!/,  // Negative lookahead
-        /\(\?\<=/,  // Positive lookbehind
-        /\(\?\<!/,  // Negative lookbehind
-        /\(\?\:/,   // Non-capturing group with complex nested structures
-        /\{.*,.*\}.*\{.*,.*\}/,  // Multiple quantifiers that could cause ReDoS
+        /\(\?\=/, // Positive lookahead
+        /\(\?\!/, // Negative lookahead
+        /\(\?\<=/, // Positive lookbehind
+        /\(\?\<!/, // Negative lookbehind
+        /\(\?\:/, // Non-capturing group with complex nested structures
+        /\{.*,.*\}.*\{.*,.*\}/, // Multiple quantifiers that could cause ReDoS
       ];
-      
-      if (dangerousPatterns.some(dangerous => dangerous.test(cleanPattern))) {
-        console.error(`Potentially dangerous regex pattern rejected: ${pattern}`);
+
+      if (dangerousPatterns.some((dangerous) => dangerous.test(cleanPattern))) {
+        console.error(
+          `Potentially dangerous regex pattern rejected: ${pattern}`,
+        );
         return null;
       }
-      
+
       try {
         return new RegExp(cleanPattern);
       } catch (e) {
@@ -80,7 +84,9 @@ const parseRegexPatterns = (str) => {
  * @returns {boolean} Parsed boolean value
  */
 const parseBoolean = (str, defaultValue = false) => {
-  if (!str) {return defaultValue;}
+  if (!str) {
+    return defaultValue;
+  }
   return str.toLowerCase() === "true";
 };
 
@@ -130,18 +136,28 @@ export const getPatternReposFromEnv = () => {
 export const isRepoExcludedByInternalRules = (repo) => {
   // 1. Check environment variable conditions
   const envConditions = getExclusionConditionsFromEnv();
-  if (envConditions.archived && repo.isArchived) {return true;}
-  if (envConditions.fork && repo.isFork) {return true;}
-  if (envConditions.private && repo.isPrivate) {return true;}
+  if (envConditions.archived && repo.isArchived) {
+    return true;
+  }
+  if (envConditions.fork && repo.isFork) {
+    return true;
+  }
+  if (envConditions.private && repo.isPrivate) {
+    return true;
+  }
 
   // 2. Check environment variable exact matches
   const envExactRepos = getExactReposFromEnv();
-  if (envExactRepos.includes(repo.name)) {return true;}
+  if (envExactRepos.includes(repo.name)) {
+    return true;
+  }
 
   // 3. Check environment variable patterns
   const envPatterns = getPatternReposFromEnv();
   for (const pattern of envPatterns) {
-    if (pattern.test(repo.name)) {return true;}
+    if (pattern.test(repo.name)) {
+      return true;
+    }
   }
 
   return false;
