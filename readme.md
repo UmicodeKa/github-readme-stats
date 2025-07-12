@@ -536,29 +536,40 @@ You can use the `&exclude_repo=repo1,repo2` parameter to exclude individual repo
 ![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=anuraghazra&exclude_repo=github-readme-stats,anuraghazra.github.io)
 ```
 
-#### Internal Repository Exclusion
+#### Vercel Environment Variables for Repository Exclusion
 
-In addition to URL parameters, repositories can be excluded internally through environment variables:
+You can configure detailed repository exclusion rules using Vercel Environment Variables without modifying code:
 
-- **`EXCLUDED_REPOS`**: Comma-separated list of repository names to exclude
-  ```bash
-  EXCLUDED_REPOS=test-repo,old-project
-  ```
+##### Condition-based Exclusions
+```bash
+EXCLUDE_ARCHIVED=true     # Exclude archived repositories
+EXCLUDE_FORK=true         # Exclude fork repositories  
+EXCLUDE_PRIVATE=false     # Exclude private repositories
+```
 
-- **`EXCLUDED_PATTERNS`**: Comma-separated list of regex patterns to exclude repositories
-  ```bash
-  EXCLUDED_PATTERNS=^test-.*,.*-backup$
-  ```
+##### Exact Repository Names
+```bash
+EXCLUDE_EXACT='repo1','repo2','secret-project'
+```
+- Use single quotes around each repository name
+- Separate multiple repositories with commas
+- Example: `'my-private-repo','old-project','test-repo'`
 
-You can also configure exclusions in the `src/common/excluded-repos.js` file:
-- **Exact matches**: Add repository names to `INTERNAL_EXCLUDED_REPOS.exact`
-- **Pattern matching**: Add regex patterns to `INTERNAL_EXCLUDED_REPOS.patterns`
-- **Condition-based**: Configure `INTERNAL_EXCLUDED_REPOS.conditions` to exclude:
-  - Archived repositories (`archived: true`)
-  - Fork repositories (`fork: true`)
-  - Private repositories (`private: true`)
+##### Pattern-based Exclusions (Regex)
+```bash
+EXCLUDE_PATTERNS='/^test_/','/^dev_/','/.*-backup$/'
+```
+- Use single quotes around each regex pattern
+- Patterns can start/end with `/` (optional)
+- Example: `'/^le_/','/^ITL_/','/nightroom2-front_/'`
 
-All exclusion methods (URL parameters, environment variables, and internal configuration) work together.
+##### Setting up in Vercel Dashboard
+1. Go to your Vercel project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add the desired exclusion variables
+4. Redeploy your application
+
+All exclusion methods work together: Vercel environment variables + URL parameters (`exclude_repo`).
 
 ### Hide individual languages
 

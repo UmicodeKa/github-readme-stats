@@ -410,7 +410,7 @@ describe("Test fetchStats", () => {
     });
   });
 
-  it("should exclude repositories based on internal rules (archived repos)", async () => {
+  it("should exclude repositories based on Vercel environment variables (archived repos)", async () => {
     // Mock data with archived repository
     const data_with_archived = {
       data: {
@@ -434,22 +434,21 @@ describe("Test fetchStats", () => {
 
     mock.onPost("https://api.github.com/graphql").reply(200, data_with_archived);
     
-    // Set internal config to exclude archived repos
-    const { INTERNAL_EXCLUDED_REPOS } = await import("../src/common/excluded-repos.js");
-    INTERNAL_EXCLUDED_REPOS.conditions.archived = true;
+    // Set Vercel environment variable to exclude archived repos
+    process.env.EXCLUDE_ARCHIVED = "true";
 
     const stats = await fetchStats("anuraghazra");
     
     // Should exclude archived repo (50 stars), so total should be 200
     expect(stats.totalStars).toBe(200);
     
-    // Reset config
-    INTERNAL_EXCLUDED_REPOS.conditions.archived = false;
+    // Clean up
+    delete process.env.EXCLUDE_ARCHIVED;
   });
 
-  it("should combine URL exclusions with environment variable exclusions", async () => {
-    // Set environment variable
-    process.env.EXCLUDED_REPOS = "test-repo-2";
+  it("should combine URL exclusions with Vercel environment variable exclusions", async () => {
+    // Set Vercel environment variable
+    process.env.EXCLUDE_EXACT = "'test-repo-2'";
     
     mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
 
@@ -460,12 +459,12 @@ describe("Test fetchStats", () => {
     expect(stats.totalStars).toBe(100);
     
     // Clean up
-    delete process.env.EXCLUDED_REPOS;
+    delete process.env.EXCLUDE_EXACT;
   });
 
-  it("should exclude repositories based on pattern matching", async () => {
-    // Set environment variable with pattern
-    process.env.EXCLUDED_PATTERNS = "^test-repo-.*";
+  it("should exclude repositories based on Vercel pattern matching", async () => {
+    // Set Vercel environment variable with pattern
+    process.env.EXCLUDE_PATTERNS = "'/^test-repo-/'";
     
     mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
 
@@ -475,6 +474,6 @@ describe("Test fetchStats", () => {
     expect(stats.totalStars).toBe(0);
     
     // Clean up
-    delete process.env.EXCLUDED_PATTERNS;
+    delete process.env.EXCLUDE_PATTERNS;
   });
 });
