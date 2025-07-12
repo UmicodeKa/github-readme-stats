@@ -27,6 +27,8 @@ const parseQuotedCommaSeparated = (str) => {
 /**
  * Parse regex patterns from quoted comma-separated string
  * Example: "'/^test_/','/^dev_/'" -> [/^test_/, /^dev_/]
+ * 
+ * Security: Only allows safe regex patterns to prevent RegExp injection
  *
  * @param {string} str The input string to parse
  * @returns {RegExp[]} Array of regex patterns
@@ -37,6 +39,29 @@ const parseRegexPatterns = (str) => {
     .map((pattern) => {
       // Remove leading/trailing slashes if present
       const cleanPattern = pattern.replace(/^\/|\/$/g, "");
+      
+      // Security: Validate pattern contains only safe characters
+      // Allow: alphanumeric, underscore, hyphen, dot, caret, dollar, asterisk, plus, question mark, square brackets
+      if (!/^[a-zA-Z0-9_\-.*+?^$[\]\\]+$/.test(cleanPattern)) {
+        console.error(`Unsafe regex pattern rejected: ${pattern}`);
+        return null;
+      }
+      
+      // Security: Reject patterns that could cause ReDoS or injection
+      const dangerousPatterns = [
+        /\(\?\=/,  // Positive lookahead
+        /\(\?\!/,  // Negative lookahead
+        /\(\?\<=/,  // Positive lookbehind
+        /\(\?\<!/,  // Negative lookbehind
+        /\(\?\:/,   // Non-capturing group with complex nested structures
+        /\{.*,.*\}.*\{.*,.*\}/,  // Multiple quantifiers that could cause ReDoS
+      ];
+      
+      if (dangerousPatterns.some(dangerous => dangerous.test(cleanPattern))) {
+        console.error(`Potentially dangerous regex pattern rejected: ${pattern}`);
+        return null;
+      }
+      
       try {
         return new RegExp(cleanPattern);
       } catch (e) {

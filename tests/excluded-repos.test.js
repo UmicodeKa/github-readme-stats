@@ -77,6 +77,31 @@ describe("excluded-repos", () => {
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
+
+    it("should reject unsafe regex patterns to prevent injection", () => {
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      
+      // Test dangerous characters (HTML tags, script injection attempts)
+      process.env.EXCLUDE_PATTERNS = "'/^test<script>/','/<.*>/'";
+      const patterns = getPatternReposFromEnv();
+      expect(patterns).toHaveLength(0);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Unsafe regex pattern rejected")
+      );
+      
+      consoleSpy.mockRestore();
+    });
+
+    it("should accept safe regex patterns", () => {
+      process.env.EXCLUDE_PATTERNS = "'/^test_/','/.*-backup$/','/dev[0-9]+/'";
+      const patterns = getPatternReposFromEnv();
+      expect(patterns).toHaveLength(3);
+      expect(patterns[0].test("test_repo")).toBe(true);
+      expect(patterns[1].test("project-backup")).toBe(true);
+      expect(patterns[2].test("dev123")).toBe(true);
+    });
   });
 
   describe("parseBoolean", () => {
