@@ -419,9 +419,27 @@ describe("Test fetchStats", () => {
           repositories: {
             totalCount: 3,
             nodes: [
-              { name: "test-repo-1", stargazers: { totalCount: 100 }, isArchived: false, isFork: false, isPrivate: false },
-              { name: "archived-repo", stargazers: { totalCount: 50 }, isArchived: true, isFork: false, isPrivate: false },
-              { name: "test-repo-2", stargazers: { totalCount: 100 }, isArchived: false, isFork: false, isPrivate: false },
+              {
+                name: "test-repo-1",
+                stargazers: { totalCount: 100 },
+                isArchived: false,
+                isFork: false,
+                isPrivate: false,
+              },
+              {
+                name: "archived-repo",
+                stargazers: { totalCount: 50 },
+                isArchived: true,
+                isFork: false,
+                isPrivate: false,
+              },
+              {
+                name: "test-repo-2",
+                stargazers: { totalCount: 100 },
+                isArchived: false,
+                isFork: false,
+                isPrivate: false,
+              },
             ],
             pageInfo: {
               hasNextPage: false,
@@ -432,16 +450,18 @@ describe("Test fetchStats", () => {
       },
     };
 
-    mock.onPost("https://api.github.com/graphql").reply(200, data_with_archived);
-    
+    mock
+      .onPost("https://api.github.com/graphql")
+      .reply(200, data_with_archived);
+
     // Set Vercel environment variable to exclude archived repos
     process.env.EXCLUDE_ARCHIVED = "true";
 
     const stats = await fetchStats("anuraghazra");
-    
+
     // Should exclude archived repo (50 stars), so total should be 200
     expect(stats.totalStars).toBe(200);
-    
+
     // Clean up
     delete process.env.EXCLUDE_ARCHIVED;
   });
@@ -449,15 +469,15 @@ describe("Test fetchStats", () => {
   it("should combine URL exclusions with Vercel environment variable exclusions", async () => {
     // Set Vercel environment variable
     process.env.EXCLUDE_EXACT = "'test-repo-2'";
-    
+
     mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
 
     const stats = await fetchStats("anuraghazra", false, ["test-repo-1"]);
-    
+
     // Should exclude both test-repo-1 (URL param) and test-repo-2 (env var)
     // Only test-repo-3 should be counted: 100 stars
     expect(stats.totalStars).toBe(100);
-    
+
     // Clean up
     delete process.env.EXCLUDE_EXACT;
   });
@@ -465,14 +485,14 @@ describe("Test fetchStats", () => {
   it("should exclude repositories based on Vercel pattern matching", async () => {
     // Set Vercel environment variable with pattern
     process.env.EXCLUDE_PATTERNS = "'/^test-repo-/'";
-    
+
     mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
 
     const stats = await fetchStats("anuraghazra");
-    
+
     // Should exclude all repos matching pattern (test-repo-1, test-repo-2, test-repo-3)
     expect(stats.totalStars).toBe(0);
-    
+
     // Clean up
     delete process.env.EXCLUDE_PATTERNS;
   });

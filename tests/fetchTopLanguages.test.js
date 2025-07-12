@@ -202,7 +202,9 @@ describe("FetchTopLanguages", () => {
                 isFork: false,
                 isPrivate: false,
                 languages: {
-                  edges: [{ size: 200, node: { color: "#0ff", name: "JavaScript" } }],
+                  edges: [
+                    { size: 200, node: { color: "#0ff", name: "JavaScript" } },
+                  ],
                 },
               },
             ],
@@ -211,13 +213,15 @@ describe("FetchTopLanguages", () => {
       },
     };
 
-    mock.onPost("https://api.github.com/graphql").reply(200, data_with_archived);
-    
+    mock
+      .onPost("https://api.github.com/graphql")
+      .reply(200, data_with_archived);
+
     // Set Vercel environment variable to exclude archived repos
     process.env.EXCLUDE_ARCHIVED = "true";
 
     const languages = await fetchTopLanguages("anuraghazra");
-    
+
     // Should only include HTML from active-repo, not JavaScript from archived-repo
     expect(languages).toStrictEqual({
       HTML: {
@@ -227,7 +231,7 @@ describe("FetchTopLanguages", () => {
         size: 100,
       },
     });
-    
+
     // Clean up
     delete process.env.EXCLUDE_ARCHIVED;
   });
@@ -235,11 +239,11 @@ describe("FetchTopLanguages", () => {
   it("should combine URL exclusions with Vercel environment variable exclusions", async () => {
     // Set Vercel environment variable
     process.env.EXCLUDE_EXACT = "'test-repo-2'";
-    
+
     mock.onPost("https://api.github.com/graphql").reply(200, data_langs);
 
     const languages = await fetchTopLanguages("anuraghazra", ["test-repo-1"]);
-    
+
     // Should exclude both test-repo-1 (URL param) and test-repo-2 (env var)
     // Only test-repo-3 and test-repo-4 should be counted
     expect(languages).toStrictEqual({
@@ -250,7 +254,7 @@ describe("FetchTopLanguages", () => {
         size: 200,
       },
     });
-    
+
     // Clean up
     delete process.env.EXCLUDE_EXACT;
   });
@@ -258,11 +262,11 @@ describe("FetchTopLanguages", () => {
   it("should exclude repositories based on Vercel pattern matching", async () => {
     // Set Vercel environment variable with pattern
     process.env.EXCLUDE_PATTERNS = "'/test-repo-[34]/'";
-    
+
     mock.onPost("https://api.github.com/graphql").reply(200, data_langs);
 
     const languages = await fetchTopLanguages("anuraghazra");
-    
+
     // Should exclude test-repo-3 and test-repo-4
     // Only test-repo-1 and test-repo-2 should be counted
     expect(languages).toStrictEqual({
@@ -273,7 +277,7 @@ describe("FetchTopLanguages", () => {
         size: 200,
       },
     });
-    
+
     // Clean up
     delete process.env.EXCLUDE_PATTERNS;
   });

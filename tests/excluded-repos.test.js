@@ -38,7 +38,10 @@ describe("excluded-repos", () => {
 
     it("should handle spaces in repository names", () => {
       process.env.EXCLUDE_EXACT = "'repo with spaces','another-repo'";
-      expect(getExactReposFromEnv()).toEqual(["repo with spaces", "another-repo"]);
+      expect(getExactReposFromEnv()).toEqual([
+        "repo with spaces",
+        "another-repo",
+      ]);
     });
   });
 
@@ -65,7 +68,9 @@ describe("excluded-repos", () => {
     });
 
     it("should handle invalid regex patterns gracefully", () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       process.env.EXCLUDE_PATTERNS = "'/^test_/','[invalid'";
       const patterns = getPatternReposFromEnv();
       expect(patterns).toHaveLength(1);
@@ -79,7 +84,7 @@ describe("excluded-repos", () => {
       delete process.env.EXCLUDE_ARCHIVED;
       delete process.env.EXCLUDE_FORK;
       delete process.env.EXCLUDE_PRIVATE;
-      
+
       const conditions = getExclusionConditionsFromEnv();
       expect(conditions.archived).toBe(false);
       expect(conditions.fork).toBe(false);
@@ -90,7 +95,7 @@ describe("excluded-repos", () => {
       process.env.EXCLUDE_ARCHIVED = "true";
       process.env.EXCLUDE_FORK = "false";
       process.env.EXCLUDE_PRIVATE = "TRUE";
-      
+
       const conditions = getExclusionConditionsFromEnv();
       expect(conditions.archived).toBe(true);
       expect(conditions.fork).toBe(false);
@@ -100,7 +105,7 @@ describe("excluded-repos", () => {
     it("should handle invalid boolean values", () => {
       process.env.EXCLUDE_ARCHIVED = "invalid";
       process.env.EXCLUDE_FORK = "";
-      
+
       const conditions = getExclusionConditionsFromEnv();
       expect(conditions.archived).toBe(false);
       expect(conditions.fork).toBe(false);
@@ -124,36 +129,61 @@ describe("excluded-repos", () => {
       process.env.EXCLUDE_PATTERNS = "'/^temp_/','.*-old$'";
       expect(isRepoExcludedByInternalRules({ name: "temp_file" })).toBe(true);
       expect(isRepoExcludedByInternalRules({ name: "project-old" })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "normal-repo" })).toBe(false);
+      expect(isRepoExcludedByInternalRules({ name: "normal-repo" })).toBe(
+        false,
+      );
     });
 
     it("should exclude archived repositories when configured", () => {
       process.env.EXCLUDE_ARCHIVED = "true";
-      expect(isRepoExcludedByInternalRules({ name: "repo", isArchived: true })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "repo", isArchived: false })).toBe(false);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isArchived: true }),
+      ).toBe(true);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isArchived: false }),
+      ).toBe(false);
     });
 
     it("should exclude fork repositories when configured", () => {
       process.env.EXCLUDE_FORK = "true";
-      expect(isRepoExcludedByInternalRules({ name: "repo", isFork: true })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "repo", isFork: false })).toBe(false);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isFork: true }),
+      ).toBe(true);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isFork: false }),
+      ).toBe(false);
     });
 
     it("should exclude private repositories when configured", () => {
       process.env.EXCLUDE_PRIVATE = "true";
-      expect(isRepoExcludedByInternalRules({ name: "repo", isPrivate: true })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "repo", isPrivate: false })).toBe(false);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isPrivate: true }),
+      ).toBe(true);
+      expect(
+        isRepoExcludedByInternalRules({ name: "repo", isPrivate: false }),
+      ).toBe(false);
     });
 
     it("should combine multiple exclusion rules", () => {
       process.env.EXCLUDE_ARCHIVED = "true";
       process.env.EXCLUDE_EXACT = "'specific-repo'";
       process.env.EXCLUDE_PATTERNS = "'/^test_/'";
-      
-      expect(isRepoExcludedByInternalRules({ name: "archived-repo", isArchived: true })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "specific-repo" })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "test_something" })).toBe(true);
-      expect(isRepoExcludedByInternalRules({ name: "normal-repo" })).toBe(false);
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "archived-repo",
+          isArchived: true,
+        }),
+      ).toBe(true);
+      expect(isRepoExcludedByInternalRules({ name: "specific-repo" })).toBe(
+        true,
+      );
+      expect(isRepoExcludedByInternalRules({ name: "test_something" })).toBe(
+        true,
+      );
+      expect(isRepoExcludedByInternalRules({ name: "normal-repo" })).toBe(
+        false,
+      );
     });
   });
 
@@ -162,7 +192,7 @@ describe("excluded-repos", () => {
       process.env.EXCLUDE_EXACT = "'env-repo1','env-repo2'";
       const urlExclusions = ["url-repo1"];
       const combined = getCombinedExcludedRepos(urlExclusions);
-      
+
       expect(combined.has("env-repo1")).toBe(true);
       expect(combined.has("env-repo2")).toBe(true);
       expect(combined.has("url-repo1")).toBe(true);
@@ -173,7 +203,7 @@ describe("excluded-repos", () => {
       process.env.EXCLUDE_EXACT = "'duplicate-repo'";
       const urlExclusions = ["duplicate-repo"];
       const combined = getCombinedExcludedRepos(urlExclusions);
-      
+
       expect(combined.has("duplicate-repo")).toBe(true);
       expect(combined.size).toBe(1);
     });
@@ -182,7 +212,7 @@ describe("excluded-repos", () => {
       delete process.env.EXCLUDE_EXACT;
       const urlExclusions = ["url-repo"];
       const combined = getCombinedExcludedRepos(urlExclusions);
-      
+
       expect(combined.has("url-repo")).toBe(true);
       expect(combined.size).toBe(1);
     });
@@ -195,51 +225,66 @@ describe("excluded-repos", () => {
       process.env.EXCLUDE_FORK = "true";
       process.env.EXCLUDE_PRIVATE = "false";
       process.env.EXCLUDE_EXACT = "'secret-project','internal-tool'";
-      process.env.EXCLUDE_PATTERNS = "'/^le_/','/^ITL_/','/^nightroom2-front_/'";
-      
+      process.env.EXCLUDE_PATTERNS =
+        "'/^le_/','/^ITL_/','/^nightroom2-front_/'";
+
       // Test various repository scenarios
-      expect(isRepoExcludedByInternalRules({ 
-        name: "le_project", 
-        isArchived: false, 
-        isFork: false 
-      })).toBe(true);
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "ITL_backend", 
-        isArchived: false, 
-        isFork: false 
-      })).toBe(true);
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "nightroom2-front_main", 
-        isArchived: false, 
-        isFork: false 
-      })).toBe(true);
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "normal-repo", 
-        isArchived: true, 
-        isFork: false 
-      })).toBe(true); // excluded because archived
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "fork-repo", 
-        isArchived: false, 
-        isFork: true 
-      })).toBe(true); // excluded because fork
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "secret-project", 
-        isArchived: false, 
-        isFork: false 
-      })).toBe(true); // excluded by exact match
-      
-      expect(isRepoExcludedByInternalRules({ 
-        name: "public-project", 
-        isArchived: false, 
-        isFork: false, 
-        isPrivate: false 
-      })).toBe(false); // should not be excluded
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "le_project",
+          isArchived: false,
+          isFork: false,
+        }),
+      ).toBe(true);
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "ITL_backend",
+          isArchived: false,
+          isFork: false,
+        }),
+      ).toBe(true);
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "nightroom2-front_main",
+          isArchived: false,
+          isFork: false,
+        }),
+      ).toBe(true);
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "normal-repo",
+          isArchived: true,
+          isFork: false,
+        }),
+      ).toBe(true); // excluded because archived
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "fork-repo",
+          isArchived: false,
+          isFork: true,
+        }),
+      ).toBe(true); // excluded because fork
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "secret-project",
+          isArchived: false,
+          isFork: false,
+        }),
+      ).toBe(true); // excluded by exact match
+
+      expect(
+        isRepoExcludedByInternalRules({
+          name: "public-project",
+          isArchived: false,
+          isFork: false,
+          isPrivate: false,
+        }),
+      ).toBe(false); // should not be excluded
     });
   });
 });
