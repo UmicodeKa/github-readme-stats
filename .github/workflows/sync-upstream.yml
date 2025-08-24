@@ -40,7 +40,12 @@ jobs:
       - name: Merge Upstream
         id: merge
         run: |
-          if git merge upstream/master --no-edit | grep -q "Already up to date"; then
+          # Capture the merge output
+          MERGE_OUTPUT=$(git merge upstream/master --no-edit 2>&1)
+          echo "$MERGE_OUTPUT"
+          
+          # Check if already up to date
+          if echo "$MERGE_OUTPUT" | grep -q "Already up to date"; then
             echo "Repository is already up to date. Skipping push."
             echo "need_push=false" >> $GITHUB_OUTPUT
           else
