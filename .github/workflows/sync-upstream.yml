@@ -38,20 +38,9 @@ jobs:
         run: git checkout master
 
       - name: Merge Upstream
-        id: merge
         run: |
-          # Capture the merge output
-          MERGE_OUTPUT=$(git merge upstream/master --no-edit 2>&1)
-          echo "$MERGE_OUTPUT"
-          
-          # Check if already up to date
-          if echo "$MERGE_OUTPUT" | grep -q "Already up to date"; then
-            echo "Repository is already up to date. Skipping push."
-            echo "need_push=false" >> $GITHUB_OUTPUT
-          else
-            echo "need_push=true" >> $GITHUB_OUTPUT
-          fi
+          git merge upstream/master --no-edit
+          echo "::notice::Merge completed successfully"
 
       - name: Push Changes
-        if: steps.merge.outputs.need_push == 'true'
         run: git push origin master
