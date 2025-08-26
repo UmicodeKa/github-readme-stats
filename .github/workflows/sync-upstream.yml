@@ -40,7 +40,7 @@ jobs:
       - name: Merge Upstream
         run: |
           git merge upstream/master --no-edit
+          echo "::notice::Merge completed successfully"
 
       - name: Push Changes
         run: git push origin master
-        continue-on-error: true
