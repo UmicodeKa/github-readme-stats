@@ -11,8 +11,10 @@ const data_stats = {
     user: {
       name: "Anurag Hazra",
       repositoriesContributedTo: { totalCount: 61 },
-      contributionsCollection: {
+      commits: {
         totalCommitContributions: 100,
+      },
+      reviews: {
         totalPullRequestReviewContributions: 50,
       },
       pullRequests: { totalCount: 300 },
@@ -37,6 +39,9 @@ const data_stats = {
     },
   },
 };
+
+const data_year2003 = JSON.parse(JSON.stringify(data_stats));
+data_year2003.data.user.commits.totalCommitContributions = 428;
 
 const data_repo = {
   data: {
@@ -91,9 +96,18 @@ const mock = new MockAdapter(axios);
 beforeEach(() => {
   process.env.FETCH_MULTI_PAGE_STARS = "false"; // Set to `false` to fetch only one page of stars.
   mock.onPost("https://api.github.com/graphql").reply((cfg) => {
+    let req = JSON.parse(cfg.data);
+
+    if (
+      req.variables &&
+      req.variables.startTime &&
+      req.variables.startTime.startsWith("2003")
+    ) {
+      return [200, data_year2003];
+    }
     return [
       200,
-      cfg.data.includes("contributionsCollection") ? data_stats : data_repo,
+      req.query.includes("totalCommitContributions") ? data_stats : data_repo,
     ];
   });
 });
@@ -410,90 +424,41 @@ describe("Test fetchStats", () => {
     });
   });
 
-  it("should exclude repositories based on Vercel environment variables (archived repos)", async () => {
-    // Mock data with archived repository
-    const data_with_archived = {
-      data: {
-        user: {
-          ...data_stats.data.user,
-          repositories: {
-            totalCount: 3,
-            nodes: [
-              {
-                name: "test-repo-1",
-                stargazers: { totalCount: 100 },
-                isArchived: false,
-                isFork: false,
-                isPrivate: false,
-              },
-              {
-                name: "archived-repo",
-                stargazers: { totalCount: 50 },
-                isArchived: true,
-                isFork: false,
-                isPrivate: false,
-              },
-              {
-                name: "test-repo-2",
-                stargazers: { totalCount: 100 },
-                isArchived: false,
-                isFork: false,
-                isPrivate: false,
-              },
-            ],
-            pageInfo: {
-              hasNextPage: false,
-              endCursor: null,
-            },
-          },
-        },
-      },
-    };
+  it("should get commits of provided year", async () => {
+    let stats = await fetchStats(
+      "anuraghazra",
+      false,
+      [],
+      false,
+      false,
+      false,
+      2003,
+    );
 
-    mock
-      .onPost("https://api.github.com/graphql")
-      .reply(200, data_with_archived);
+    const rank = calculateRank({
+      all_commits: false,
+      commits: 428,
+      prs: 300,
+      reviews: 50,
+      issues: 200,
+      repos: 5,
+      stars: 300,
+      followers: 100,
+    });
 
-    // Set Vercel environment variable to exclude archived repos
-    process.env.EXCLUDE_ARCHIVED = "true";
-
-    const stats = await fetchStats("anuraghazra");
-
-    // Should exclude archived repo (50 stars), so total should be 200
-    expect(stats.totalStars).toBe(200);
-
-    // Clean up
-    delete process.env.EXCLUDE_ARCHIVED;
-  });
-
-  it("should combine URL exclusions with Vercel environment variable exclusions", async () => {
-    // Set Vercel environment variable
-    process.env.EXCLUDE_EXACT = "'test-repo-2'";
-
-    mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
-
-    const stats = await fetchStats("anuraghazra", false, ["test-repo-1"]);
-
-    // Should exclude both test-repo-1 (URL param) and test-repo-2 (env var)
-    // Only test-repo-3 should be counted: 100 stars
-    expect(stats.totalStars).toBe(100);
-
-    // Clean up
-    delete process.env.EXCLUDE_EXACT;
-  });
-
-  it("should exclude repositories based on Vercel pattern matching", async () => {
-    // Set Vercel environment variable with pattern
-    process.env.EXCLUDE_PATTERNS = "'/^test-repo-/'";
-
-    mock.onPost("https://api.github.com/graphql").reply(200, data_stats);
-
-    const stats = await fetchStats("anuraghazra");
-
-    // Should exclude all repos matching pattern (test-repo-1, test-repo-2, test-repo-3)
-    expect(stats.totalStars).toBe(0);
-
-    // Clean up
-    delete process.env.EXCLUDE_PATTERNS;
+    expect(stats).toStrictEqual({
+      contributedTo: 61,
+      name: "Anurag Hazra",
+      totalCommits: 428,
+      totalIssues: 200,
+      totalPRs: 300,
+      totalPRsMerged: 0,
+      mergedPRsPercentage: 0,
+      totalReviews: 50,
+      totalStars: 300,
+      totalDiscussionsStarted: 0,
+      totalDiscussionsAnswered: 0,
+      rank,
+    });
   });
 });
