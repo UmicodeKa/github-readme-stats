@@ -320,12 +320,12 @@ Here is a list of all available locales:
 | `fi` | Finnish |
 | `fr` | French |
 | `de` | German |
+| `el` | Greek |
 
 </td><td>
 
 | Code | Locale |
 | --- | --- |
-| `el` | Greek |
 | `he` | Hebrew |
 | `hi` | Hindi |
 | `hu` | Hungarian |
@@ -339,19 +339,22 @@ Here is a list of all available locales:
 | `fa` | Persian (Farsi) |
 | `pl` | Polish |
 | `pt-br` | Portuguese (Brazil) |
+| `pt-pt` | Portuguese (Portugal) |
+| `ro` | Romanian |
 
 </td><td>
 
 | Code | Locale |
 | --- | --- |
-| `pt-pt` | Portuguese (Portugal) |
-| `ro` | Romanian |
 | `ru` | Russian |
+| `sa` | Sanskrit |
 | `sr` | Serbian (Cyrillic) |
 | `sr-latn` | Serbian (Latin) |
 | `sk` | Slovak |
 | `es` | Spanish |
+| `sw` | Swahili |
 | `se` | Swedish |
+| `ta` | Tamil |
 | `th` | Thai |
 | `tr` | Turkish |
 | `uk-ua` | Ukrainian |
@@ -904,7 +907,7 @@ Since the GitHub API only allows 5k requests per hour, my `https://github-readme
 <summary><b>:hammer_and_wrench: Step-by-step guide for deploying on other platforms</b></summary>
 
 1.  Fork or clone this repo as per your needs
-2.  Add `express` to the dependencies section of `package.json`
+2.  Move `express` from the devDependencies to the dependencies section of `package.json`
     <https://github.com/anuraghazra/github-readme-stats/blob/ba7c2f8b55eac8452e479c8bd38b044d204d0424/package.json#L54-L61>
 3.  Run `npm i` if needed (initial setup)
 4.  Run `node express.js` to start the server, or set the entry point to `express.js` in `package.json` if you're deploying on a managed service
