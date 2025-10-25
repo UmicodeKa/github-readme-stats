@@ -1,29 +1,21 @@
 // @ts-check
 
 import { retryer } from "../common/retryer.js";
-import {
-  CustomError,
-  logger,
-  MissingParamError,
-  request,
-  wrapTextMultiline,
-} from "../common/utils.js";
+import { logger } from "../common/log.js";
+import { CustomError, MissingParamError } from "../common/error.js";
+import { wrapTextMultiline } from "../common/fmt.js";
+import { request } from "../common/http.js";
 import {
   getCombinedExcludedRepos,
   isRepoExcludedByInternalRules,
 } from "../common/excluded-repos.js";
 
 /**
- * @typedef {import("axios").AxiosRequestHeaders} AxiosRequestHeaders Axios request headers.
- * @typedef {import("axios").AxiosResponse} AxiosResponse Axios response.
- */
-
-/**
  * Top languages fetcher object.
  *
- * @param {AxiosRequestHeaders} variables Fetcher variables.
+ * @param {any} variables Fetcher variables.
  * @param {string} token GitHub token.
- * @returns {Promise<AxiosResponse>} Languages fetcher response.
+ * @returns {Promise<import("axios").AxiosResponse>} Languages fetcher response.
  */
 const fetcher = (variables, token) => {
   return request(
